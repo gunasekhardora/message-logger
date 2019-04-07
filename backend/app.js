@@ -1,7 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const Post = require('./models/post');
 
 const app = express();
+
+mongoose.connect("mongodb+srv://kgsdora:6eKgdiZtoXbb6Jg8@cluster0-daszj.mongodb.net/message-logger?retryWrites=true",
+    {useNewUrlParser: true})
+    .then( () => {
+        console.log("Connected to Mongo database!");
+    })
+    .catch( () => {
+        console.log("Connection to Mongo failed!");
+    });
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
@@ -20,30 +32,37 @@ app.use((req, res, next) => {
 });  
 
 app.post("/api/posts", (req, res, next) => {
-    const post = req.body;
-    console.log(post);
+    const post = new Post({
+        title: req.body.title,
+        content: req.body.content
+    });
+    post.save();
     res.status(201).json({
         message: 'Post added successfully'
     });
 });
 
-app.use('/api/posts', (req, res, next) => {
-    const posts = [
-        {
-            id: "svxbfbfxbfbf",
-            title: "1st server-side post",
-            content: "From server!"
-        },
-        {
-            id: "zdvvcbbbbcbc",
-            title: "2nd server-side post",
-            content: "From server!"
-        }
-    ];
-    return res.status(200).json({
-        message: 'Posts fetched successfully!',
-        posts: posts
-    });
+app.get('/api/posts', (req, res, next) => {
+    // const posts = [
+    //     {
+    //         id: "svxbfbfxbfbf",
+    //         title: "1st server-side post",
+    //         content: "From server!"
+    //     },
+    //     {
+    //         id: "zdvvcbbbbcbc",
+    //         title: "2nd server-side post",
+    //         content: "From server!"
+    //     }
+    // ];
+    Post.find()
+        .then( documents => {
+            return res.status(200).json({
+                message: 'Posts fetched successfully!',
+                posts: documents
+            });
+        });
+    
 });
 
 module.exports = app;
